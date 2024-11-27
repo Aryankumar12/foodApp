@@ -1,0 +1,5 @@
+spring.application.name=springsecurity
+server.port=1012
+spring.security.user.name=anshul
+
+spring.security.user.password=anshul

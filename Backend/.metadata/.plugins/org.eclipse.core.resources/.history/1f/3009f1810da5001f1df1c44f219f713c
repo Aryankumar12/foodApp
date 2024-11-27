@@ -1,0 +1,16 @@
+package com.example.demo.util;
+
+import com.example.Entity.User.Role;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+
+import java.io.IOException;
+
+public class RoleDeserializer extends JsonDeserializer<Role> {
+    @Override
+    public Role deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+        String role = p.getText().toUpperCase(); // Convert the input string to uppercase
+        return Role.valueOf(role); // Convert the string to the corresponding enum value
+    }
+}

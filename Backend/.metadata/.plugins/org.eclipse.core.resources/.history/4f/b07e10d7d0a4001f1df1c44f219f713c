@@ -1,0 +1,15 @@
+spring.application.name=MajorProject
+# PostgreSQL connection details
+spring.datasource.url=jdbc:postgresql://localhost:5432/MajorProject
+spring.datasource.username=postgres
+spring.datasource.password=anshul@123
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+server.port=7860
+## Optional: Hibernate settings for Spring JPA (optional but recommended)
+#spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+#spring.jpa.hibernate.ddl-auto=update  # Use `update` for development; in production, consider `validate` or `none`
+#spring.jpa.show-sql=true # Optional: Show SQL in console for debugging
+
+jwt.secret=myVerySecureSecretKey123!

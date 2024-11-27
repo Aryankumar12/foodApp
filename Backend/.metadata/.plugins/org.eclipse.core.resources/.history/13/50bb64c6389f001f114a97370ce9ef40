@@ -1,0 +1,56 @@
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.filter.OncePerRequestFilter;  // Instead of UsernamePasswordAuthenticationFilter
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.util.List;
+
+public class JwtAuthenticationFilter extends OncePerRequestFilter {  // Use OncePerRequestFilter instead
+
+    private final String SECRET_KEY = "yourSecretKey";  // Ensure that this key matches the one used for JWT creation
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+
+        String jwt = request.getHeader("Authorization");
+
+        if (jwt != null && jwt.startsWith("Bearer ")) {
+            jwt = jwt.substring(7); // Remove the 'Bearer ' prefix
+
+            // Parse JWT token to extract user details
+            Claims claims = Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody();
+
+            String username = claims.getSubject();
+            String role = claims.get("role", String.class);
+
+            // If the JWT is valid, set the authentication in the SecurityContext
+            if (username != null) {
+                // Create the authorities (roles)
+                List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
+
+                // Create Authentication object
+                Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+
+                // Set authentication in the context
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        }
+
+        // Continue with the filter chain
+        chain.doFilter(request, response);
+    }
+}

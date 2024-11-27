@@ -1,0 +1,44 @@
+// SecurityConfig.java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+public class WebSecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf().disable()
+            .authorizeHttpRequests((authz) -> authz
+                .requestMatchers("/auth/register").permitAll()
+                .requestMatchers("/retailer/**").hasAuthority("RETAILER")
+                .requestMatchers("/customer/**").hasAuthority("CUSTOMER")
+                .anyRequest().authenticated()
+            )
+            .formLogin((form) -> form
+                .permitAll()
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    // Define your UserDetailsService bean if you want to load users from the database
+    // This could connect to your database or in-memory user details
+    @Bean
+    public UserDetailsService userDetailsService() {
+        // Define your UserDetailsService here, or inject one if you already have it
+        return null; // Replace with an actual implementation
+    }
+}

@@ -1,0 +1,52 @@
+package com.example.demo.security;
+
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
+@Component
+public class jwtTokenProvider {
+
+	 @Value("${jwt.secret}")  // Inject secret key from properties file
+	    private String SECRET_KEY; // Replace with your secret key
+    private final long EXPIRATION_TIME = 86400000L;  // 24 hours in milliseconds
+
+    // Method to generate JWT token
+    public String generateToken(Authentication authentication) {
+        // Get the custom UserDetails object from Authentication
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+
+        // Create the JWT token
+        return Jwts.builder()
+                .setSubject(userPrincipal.getUsername())  // Set username as subject
+                .claim("role", userPrincipal.getRole())   // Add user role as claim
+                .setIssuedAt(new Date())                  // Set issue date
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))  // Set expiration date
+                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)  // Sign the token with secret key
+                .compact();  // Generate the compact token string
+    }
+
+    // Method to validate JWT token
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);  // Parse the token and validate its signature
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Method to extract username from JWT token
+    public String getUsernameFromToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(SECRET_KEY)
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();  // Get the username (subject) from token
+    }
+}

@@ -1,0 +1,76 @@
+package com.example.demo.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.Entity.User;
+import com.example.demo.model.JwtResponse;
+import com.example.demo.model.LoginRequest;
+import com.example.demo.model.RegisterRequest;
+import com.example.demo.security.UserDetailsImpl;
+import com.example.demo.security.jwtTokenProvider;
+import com.example.demo.service.UserService;
+
+@RestController
+@CrossOrigin(origins = "http://localhost:5180") // Allow requests from this frontend URL
+@RequestMapping("/auth")
+public class AuthController {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private jwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private UserService userService;
+
+    // Handle login request
+    @PostMapping("/login")
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+        // Authenticate user
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                loginRequest.getEmail(),
+                loginRequest.getPassword()
+            )
+        );
+
+        // Set authentication context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Generate JWT token
+        String jwt = jwtTokenProvider.generateToken(authentication);
+
+        // Get user details (including role)
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String role = userDetails.getRole();
+
+        // Return response with token and role
+        return ResponseEntity.ok(new JwtResponse(jwt, role));
+    }
+
+    // Handle register request
+    @PostMapping("/auth/register")
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest registerRequest) {
+        // Check if user already exists
+        if (userService.existsByEmail(registerRequest.getEmail())) {
+            return ResponseEntity.badRequest().body("Email is already taken!");
+        }
+
+        // Save new user (password will be encoded)
+        userService.registerUser(registerRequest);
+//        System.out.println("User role: " + User.getRole());
+
+        return ResponseEntity.ok("User registered successfully!");
+    }
+}
